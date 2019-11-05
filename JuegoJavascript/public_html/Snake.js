@@ -1,8 +1,24 @@
+/**
+ * Codigo correspondiente a lo logica del juego Snake
+ * 
+ * @version 1.1
+ * 
+ * @author Brayan Lopez
+ * 
+ * History
+ * 1.1 se mejoro el codigo y la documentacion del mismo.
+ * 1.0 se creo el juego con base al tutorial
+ * Juego de Snake en Javascript HTML5 Canvas. GioCode.
+ * https://www.youtube.com/watch?v=xBVYyto4U5Y
+ **/
+
 //Variables globales
-var velocidad = 80;
-var tamano = 10;
+var velocidad = 100; //velocidad del juego, entre mas pequeño mas rapido
+var tamano = 15; //tamno de la culebrita
 
 /**
+ * @class Objeto
+ * @description Clase base para otras
  */
 class Objeto {
     constructor() {
@@ -19,6 +35,11 @@ class Objeto {
     }
 }
 
+/**
+ * @class Cola
+ * @description representa la cola del objeto 
+ * @extends Objeto
+ */
 class Cola extends Objeto {
     constructor(x, y) {
         super();
@@ -27,21 +48,21 @@ class Cola extends Objeto {
         this.siguiente = null;
     }
     dibujar(ctx) {
-        if (this.siguiente != null) {
+        if (this.siguiente !== null) {
             this.siguiente.dibujar(ctx);
         }
-        ctx.fillStyle = "#0000FF";
+        ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, this.tamano, this.tamano);
     }
     setPos(x, y) {
-        if (this.siguiente != null) {
+        if (this.siguiente !== null) {
             this.siguiente.setPos(this.x, this.y);
         }
         this.x = x;
         this.y = y;
     }
     meter() {
-        if (this.siguiente == null) {
+        if (this.siguiente === null) {
             this.siguiente = new Cola(this.x, this.y);
         } else {
             this.siguiente.meter();
@@ -52,6 +73,10 @@ class Cola extends Objeto {
     }
 }
 
+/**
+ * @class Comida
+ * @description representa la comida de la serpiente
+ * */
 class Comida extends Objeto {
     constructor() {
         super();
@@ -71,6 +96,11 @@ class Comida extends Objeto {
         ctx.fillRect(this.x, this.y, this.tamano, this.tamano);
     }
 }
+
+/**
+ * @class Juego
+ * @description Representa la logica del juego
+ * */
 class Juego {
     constructor() {
         this.puntaje = 0;
@@ -87,34 +117,32 @@ class Juego {
         return this.puntaje;
     }
 }
-
-//Objetos del juego
-var gestor = new Juego();
-var cabeza = new Cola(20, 20);
-var comida = new Comida();
-var ejex = true;
-var ejey = true;
-var xdir = 0;
-var ydir = 0;
-
+/**
+ * Funcion encargada del movimiento 
+ */
 function movimiento() {
     var nx = cabeza.x + xdir;
     var ny = cabeza.y + ydir;
     cabeza.setPos(nx, ny);
 }
+
+/**
+ * Funcion encargada del control de la culebrita
+ * @param {evento} event es el evento que recibe la funcion
+ * */
 function control(event) {
     var cod = event.keyCode;
-    if(cod == 13){
+    if (cod === 13) {
         jugando = true;
     }
     if (ejex) {
-        if (cod == 38) {
+        if (cod === 38) {
             ydir = -tamano;
             xdir = 0;
             ejex = false;
             ejey = true;
         }
-        if (cod == 40) {
+        if (cod === 40) {
             ydir = tamano;
             xdir = 0;
             ejex = false;
@@ -122,13 +150,13 @@ function control(event) {
         }
     }
     if (ejey) {
-        if (cod == 37) {
+        if (cod === 37) {
             ydir = 0;
             xdir = -tamano;
             ejey = false;
             ejex = true;
         }
-        if (cod == 39) {
+        if (cod === 39) {
             ydir = 0;
             xdir = tamano;
             ejey = false;
@@ -136,27 +164,40 @@ function control(event) {
         }
     }
 }
-
-function findeJuego() {
+/**
+ * @function finDeJuego
+ * @description se ejecuta cuando se acaba el juego
+ */
+function finDeJuego() {
     xdir = 0;
     ydir = 0;
     ejex = true;
     ejey = true;
-        
+
     cabeza = new Cola(20, 20);
     comida = new Comida();
     //alert("Perdiste " + "Puntaje: " + gestor.getPuntaje());
-    
+
     gestor.reiniciarPuntaje();
 }
-function choquepared() {
-    if (cabeza.x < 0 || cabeza.x > 590 || cabeza.y < 0 || cabeza.y > 590) {
+
+/**
+ * @function choquePared
+ * @description Comprueba cuando la serpiente se choca con una pared
+ */
+function choquePared() {
+    var canvas = document.getElementById("canvas");
+    if (cabeza.x < 0 || cabeza.x > (canvas.width - 10) || cabeza.y < 0 || cabeza.y > (canvas.height - 10)) {
         jugando = false;
-        findeJuego();
-        
+        finDeJuego();
     }
 }
-function choquecuerpo() {
+
+/**
+ * @function choqueCuerpo
+ * @description Comprueba cuando la serpiente se choca consigo misma
+ */
+function choqueCuerpo() {
     var temp = null;
     try {
         temp = cabeza.verSiguiente().verSiguiente();
@@ -167,32 +208,43 @@ function choquecuerpo() {
         if (cabeza.choque(temp)) {
             jugando = false;
             //fin de juego
-            findeJuego();
+            finDeJuego();
         } else {
             temp = temp.verSiguiente();
         }
     }
 }
 
+/**
+ * @function
+ * @description se encargada de dibujar la serpiente
+ */
 function dibujar() {
     var canvas = document.getElementById("canvas");
     var score = document.getElementById("puntaje");
     var ctx = canvas.getContext("2d");
-    var ctxpt = score.getContext("2d");
+    var ctxScore = score.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctxpt.clearRect(0, 0, score.width, score.height);
-    ctxpt.font = "30px Arial";
+    ctxScore.clearRect(0, 0, score.width, score.height);
+    ctxScore.font = "30px Arial";
     ctx.font = "30px Arial";
-    if(!jugando) ctx.fillText("perdiste, oprimer enter", 10, 50);
-    ctxpt.fillText(gestor.getPuntaje(), 10, 50);
+    if (!jugando) {
+        ctx.fillText("perdiste, oprimer enter", 10, 50);
+    }
+    ctxScore.fillText(gestor.getPuntaje(), 10, 50);
     //aquí abajo va todo el dibujo
     cabeza.dibujar(ctx);
     comida.dibujar(ctx, "green");
 }
+
+/**
+ * @function main
+ * @description funcion principal
+ */
 function main() {
-    if(jugando){
-        choquecuerpo();
-        choquepared();
+    if (jugando) {
+        choqueCuerpo();
+        choquePared();
         dibujar();
         movimiento();
         if (cabeza.choque(comida)) {
@@ -202,5 +254,16 @@ function main() {
         }
     }
 }
-var jugando=true;
+
+//Objetos del juego
+var gestor = new Juego();
+var cabeza = new Cola(20, 20);
+var comida = new Comida();
+var ejex = true;
+var ejey = true;
+var xdir = 0;
+var ydir = 0;
+
+
+var jugando = true;
 setInterval("main()", velocidad);
